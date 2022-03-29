@@ -1,5 +1,6 @@
 const express = require('express')
 const request = require('request')
+const topicFind = require('../utils/topicGet')
 const router = express.Router()
 
 //for load balancing
@@ -79,11 +80,16 @@ router.use('/books/purchase/:id', (req, res) => {
 })
 
 //notified to change 
-router.delete('/invalidate/:id', (req, res) => {
+router.delete('/invalidate/:id', async(req, res) => {
     console.log('book changed, delete from cache')
     const id = parseInt(req.params.id)
     if(cache.has('id_'+id)){
         cache.delete('id_'+id)
+    }
+    const topic = await topicFind(id, catalogRep[catalogIndex])
+    console.log(topic)
+    if(cache.has('topic_'+topic)){
+        cache.delete('topic_'+topic)
     }
     console.log('current cache size:'+ cache.size)
     res.status(200).send("OK")
