@@ -6,7 +6,7 @@ const app = express()
 const PORT = process.env.PORT || 3002
 
 app.use(express.json())
-app.use(logPort)
+//app.use(logPort)
 app.use(frontRouter)
 
 app.listen(PORT, ()=>{

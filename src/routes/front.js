@@ -1,6 +1,7 @@
 const express = require('express')
 const request = require('request')
 const router = express.Router()
+
 //for load balancing
 const catalogRep = ["10.211.55.3", "10.211.55.4"]
 const orderRep = ["10.211.55.3", "10.211.55.4"]
@@ -54,7 +55,7 @@ router.use('/books/search/:topic', (req, res) => {
 //patch a book
 router.patch('/books/:id', (req, res) => {
     const id = req.params.id
-    catalogIndex>= catalogRep.length? catalogIndex =0: catalogIndex+=1
+    catalogIndex>= catalogRep.length-1? catalogIndex =0: catalogIndex+=1
     const url = 'http://'+catalogRep[catalogIndex]+':3000/books/' + id
     request({ url, json: true, method: 'PATCH', body: req.body }, (error, { body, statusCode }={}) => {
         if (error) {
@@ -67,9 +68,9 @@ router.patch('/books/:id', (req, res) => {
 //purchace a book
 router.use('/books/purchase/:id', (req, res) => {
     const id = req.params.id
-    orderIndex>= orderRep.length? orderIndex =0: orderIndex+=1
-    const url = 'http://'+orderRep[orderIndex]+'/books/purchase/' + id
-    request({ url, json: true }, (error, { body }) => {
+    orderIndex>= orderRep.length-1? orderIndex =0: orderIndex+=1
+    const url = 'http://'+orderRep[orderIndex]+':3001/books/purchase/' + id
+    request({ url, json: true }, (error, { body } ={}) => {
         if (error) {
             return res.status(500).send(error)
         }
@@ -77,13 +78,14 @@ router.use('/books/purchase/:id', (req, res) => {
     })
 })
 
-//new
 //notified to change 
 router.delete('/invalidate/:id', (req, res) => {
+    console.log('book changed, delete from cache')
     const id = parseInt(req.params.id)
-    if(cache.has(id)){
-        cache.delete(id)
+    if(cache.has('id_'+id)){
+        cache.delete('id_'+id)
     }
+    console.log('current cache size:'+ cache.size)
     res.status(200).send("OK")
 })
 
